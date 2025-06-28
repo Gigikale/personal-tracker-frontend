@@ -1,0 +1,75 @@
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    align-items: flex-end;
+  }
+  
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .filter-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  
+  .filter-select,
+  .filter-input {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  
+  .filter-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #1a11b6;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .filter-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .filter-button:hover {
+    background-color: #1f13a3;
+    transform: scale(1.03);
+  }
+  
+  .spinner {
+    height: 1.25rem;
+    width: 1.25rem;
+    animation: spin 1s linear infinite;
+  }
+  
+  .spinner-circle {
+    opacity: 0.25;
+  }
+  
+  .spinner-path {
+    opacity: 0.75;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  

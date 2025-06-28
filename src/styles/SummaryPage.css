@@ -1,0 +1,96 @@
+.summary-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 1rem;
+  }
+  
+  .summary-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 2rem;
+  }
+  
+  .loading-spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+  }
+  
+  .spinner {
+    animation: spin 1s linear infinite;
+    height: 40px;
+    width: 40px;
+    color: #3b82f6;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .summary-card {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+  }
+  
+  .total-expense {
+    text-align: center;
+  }
+  
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 1rem;
+  }
+  
+  .total-amount {
+    font-size: 2rem;
+    color: #3b82f6;
+    font-weight: bold;
+  }
+  
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .category-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .category-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    color: #555;
+    border-bottom: 1px solid #eee;
+  }
+
+  .month-picker {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .month-picker label {
+    font-weight: 500;
+    color: #374151;
+  }
+  .bar-chart-section {
+    margin-top: 2rem;
+  }
+  
+  
+  

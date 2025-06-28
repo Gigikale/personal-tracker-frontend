@@ -1,0 +1,101 @@
+:root {
+    --color-light-bg: #f5f6fa;
+    --color-dark-bg: #1e1e2f;
+    --color-light-text: #333;
+    --color-dark-text: #fff;
+    --color-link: #487eb0;
+    --color-link-hover: #27496d;
+    --color-white: #fff;
+    --color-shadow: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Global styles */
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Themes */
+  .theme-light {
+    background-color: var(--color-light-bg);
+    color: var(--color-light-text);
+  }
+  .theme-dark {
+    background-color: var(--color-dark-bg);
+    color: var(--color-dark-text);
+  }
+  
+  /* Title */
+  .title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 2rem;
+  }
+  
+  /* Container */
+  .app-container {
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Navbar */
+  .navbar {
+    background-color: var(--color-white);
+    padding: 1rem;
+    box-shadow: 0 2px 4px var(--color-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .theme-dark .navbar {
+    background-color: #2f3640;
+  }
+  
+  .nav-links {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .nav-link {
+    color: var(--color-link);
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.2s ease-in-out;
+  }
+  
+  .nav-link:hover {
+    text-decoration: underline;
+    color: var(--color-link-hover);
+    transform: scale(1.05);
+  }
+  
+  /* Toggle Button */
+  .toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #ccc;
+    border: none;
+    border-radius: 4px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s ease-in-out;
+  }
+  
+  .theme-dark .toggle-btn {
+    background-color: #444;
+    color: var(--color-dark-text);
+  }
+  
+  .toggle-btn:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Main Content */
+  .main-content {
+    padding: 2rem;
+  }
+  
