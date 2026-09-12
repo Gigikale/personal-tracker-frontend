@@ -124,6 +124,8 @@ export const householdsApi = {
   list: () => apiClient.get<Household[]>('/households').then((r) => r.data),
   get: (id: string) => apiClient.get<Household>(`/households/${id}`).then((r) => r.data),
   create: (data: { name: string }) => apiClient.post<Household>('/households', data).then((r) => r.data),
+  update: (id: string, data: { name: string }) =>
+    apiClient.patch<Household>(`/households/${id}`, data).then((r) => r.data),
   remove: (id: string) => apiClient.delete(`/households/${id}`),
   addMember: (id: string, email: string) =>
     apiClient.post<Household>(`/households/${id}/members`, { email }).then((r) => r.data),
