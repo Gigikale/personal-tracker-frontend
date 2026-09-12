@@ -58,6 +58,30 @@ export function DashboardPage() {
   if (loading) return <p className="text-sm text-ink-muted">Loading…</p>
 
   const overall = summary?.overall
+  const hasOverallBudget = overall?.budgetAmount !== null && overall?.budgetAmount !== undefined
+
+  // When there's no explicit "Overall" budget, fall back to aggregating the per-category
+  // budgets so the summary cards still mean something instead of showing "No budget set".
+  const budgetedCategories = summary?.categories.filter((c) => c.budgetAmount !== null) ?? []
+  const fallbackBudgetTotal = budgetedCategories.length
+    ? budgetedCategories.reduce((sum, c) => sum + (c.budgetAmount ?? 0), 0)
+    : null
+  const fallbackSpentInBudgeted = budgetedCategories.reduce((sum, c) => sum + c.actualSpent, 0)
+  const worstCategoryPercent = budgetedCategories.length
+    ? Math.max(...budgetedCategories.map((c) => c.percentUsed ?? 0))
+    : null
+
+  const effectiveBudgetAmount = hasOverallBudget ? overall!.budgetAmount : fallbackBudgetTotal
+  const effectiveRemaining = hasOverallBudget
+    ? overall!.remaining
+    : fallbackBudgetTotal !== null
+      ? fallbackBudgetTotal - fallbackSpentInBudgeted
+      : null
+  const effectivePercentUsed = hasOverallBudget ? overall!.percentUsed : worstCategoryPercent
+
+  // Categories already come back sorted by actual spend (highest first) from the API.
+  const topSpending = (summary?.categories ?? []).filter((c) => c.actualSpent > 0).slice(0, 6)
+  const maxSpent = topSpending.length ? Math.max(...topSpending.map((c) => c.actualSpent)) : 0
 
   return (
     <div>
@@ -71,24 +95,22 @@ export function DashboardPage() {
         <Card>
           <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">Total budget</p>
           <p className="font-display text-2xl font-bold text-ink">
-            {overall?.budgetAmount !== null && overall?.budgetAmount !== undefined ? format(overall.budgetAmount) : '—'}
+            {effectiveBudgetAmount !== null ? format(effectiveBudgetAmount) : '—'}
           </p>
         </Card>
         <Card>
           <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">Remaining</p>
           <p
             className={`font-display text-2xl font-bold ${
-              overall?.remaining !== null && overall?.remaining !== undefined && overall.remaining < 0
-                ? 'text-accent-coral'
-                : 'text-ink'
+              effectiveRemaining !== null && effectiveRemaining < 0 ? 'text-accent-coral' : 'text-ink'
             }`}
           >
-            {overall?.remaining !== null && overall?.remaining !== undefined ? format(overall.remaining) : '—'}
+            {effectiveRemaining !== null ? format(effectiveRemaining) : '—'}
           </p>
         </Card>
         <Card className="flex flex-col justify-between">
           <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">Status</p>
-          <StatusBadge percentUsed={overall?.percentUsed ?? null} />
+          <StatusBadge percentUsed={effectivePercentUsed} />
         </Card>
       </div>
 
@@ -175,6 +197,26 @@ export function DashboardPage() {
           )}
         </Card>
       </div>
+
+      {topSpending.length > 0 && (
+        <Card className="mt-5">
+          <h3 className="mb-4 font-display text-base font-bold text-ink">Top spending categories</h3>
+          <div className="flex flex-col gap-3">
+            {topSpending.map((c) => (
+              <div key={c.categoryId} className="flex items-center gap-3">
+                <span className="w-28 flex-shrink-0 truncate text-sm font-semibold text-ink">{c.categoryName}</span>
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-alt">
+                  <div
+                    className="h-full rounded-full bg-brand-from"
+                    style={{ width: `${maxSpent > 0 ? (c.actualSpent / maxSpent) * 100 : 0}%` }}
+                  />
+                </div>
+                <span className="w-20 flex-shrink-0 text-right text-sm font-bold text-ink">{format(c.actualSpent)}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }
