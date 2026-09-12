@@ -10,5 +10,6 @@ export function currencySymbol(code: CurrencyCode | undefined | null): string {
 }
 
 export function formatMoney(amount: number, code: CurrencyCode | undefined | null): string {
-  return `${currencySymbol(code)}${amount.toFixed(2)}`
+  const sign = amount < 0 ? '-' : ''
+  return `${sign}${currencySymbol(code)}${Math.abs(amount).toFixed(2)}`
 }

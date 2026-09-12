@@ -14,6 +14,22 @@ function barColor(percentUsed: number | null) {
   return 'bg-brand-from'
 }
 
+function budgetStatus(percentUsed: number | null) {
+  if (percentUsed === null) return { label: 'No budget set', className: 'bg-surface-alt text-ink-muted' }
+  if (percentUsed >= 100) return { label: 'Over budget', className: 'bg-accent-coral/15 text-accent-coral' }
+  if (percentUsed >= 80) return { label: 'Approaching limit', className: 'bg-accent-amber/15 text-accent-amber-hover' }
+  return { label: 'On track', className: 'bg-brand-from/10 text-brand-from' }
+}
+
+function StatusBadge({ percentUsed }: { percentUsed: number | null }) {
+  const status = budgetStatus(percentUsed)
+  return (
+    <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${status.className}`}>
+      {status.label}
+    </span>
+  )
+}
+
 export function DashboardPage() {
   const { format } = useCurrency()
   const [summary, setSummary] = useState<BudgetSummary | null>(null)
@@ -41,9 +57,40 @@ export function DashboardPage() {
 
   if (loading) return <p className="text-sm text-ink-muted">Loading…</p>
 
+  const overall = summary?.overall
+
   return (
     <div>
       <PageHeader title="Dashboard" description={monthLabel} />
+
+      <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Card>
+          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">Total spent</p>
+          <p className="font-display text-2xl font-bold text-ink">{format(overall?.actualSpent ?? 0)}</p>
+        </Card>
+        <Card>
+          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">Total budget</p>
+          <p className="font-display text-2xl font-bold text-ink">
+            {overall?.budgetAmount !== null && overall?.budgetAmount !== undefined ? format(overall.budgetAmount) : '—'}
+          </p>
+        </Card>
+        <Card>
+          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">Remaining</p>
+          <p
+            className={`font-display text-2xl font-bold ${
+              overall?.remaining !== null && overall?.remaining !== undefined && overall.remaining < 0
+                ? 'text-accent-coral'
+                : 'text-ink'
+            }`}
+          >
+            {overall?.remaining !== null && overall?.remaining !== undefined ? format(overall.remaining) : '—'}
+          </p>
+        </Card>
+        <Card className="flex flex-col justify-between">
+          <p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">Status</p>
+          <StatusBadge percentUsed={overall?.percentUsed ?? null} />
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -51,11 +98,14 @@ export function DashboardPage() {
 
           {summary?.overall.budgetAmount !== null && (
             <div className="mb-5">
-              <div className="mb-1.5 flex items-baseline justify-between">
+              <div className="mb-1.5 flex items-baseline justify-between gap-2">
                 <span className="text-sm font-semibold text-ink">Overall</span>
-                <span className="text-sm text-ink-muted">
-                  {format(summary!.overall.actualSpent)} / {format(summary!.overall.budgetAmount!)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-ink-muted">
+                    {format(summary!.overall.actualSpent)} / {format(summary!.overall.budgetAmount!)}
+                  </span>
+                  {(summary!.overall.percentUsed ?? 0) >= 80 && <StatusBadge percentUsed={summary!.overall.percentUsed} />}
+                </div>
               </div>
               <div className="h-2.5 overflow-hidden rounded-full bg-surface-alt">
                 <div
@@ -78,11 +128,14 @@ export function DashboardPage() {
             <div className="flex flex-col gap-4">
               {summary?.categories.map((c) => (
                 <div key={c.categoryId}>
-                  <div className="mb-1.5 flex items-baseline justify-between">
+                  <div className="mb-1.5 flex items-baseline justify-between gap-2">
                     <span className="text-sm font-semibold text-ink">{c.categoryName}</span>
-                    <span className="text-sm text-ink-muted">
-                      {format(c.actualSpent)} {c.budgetAmount !== null && `/ ${format(c.budgetAmount)}`}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-ink-muted">
+                        {format(c.actualSpent)} {c.budgetAmount !== null && `/ ${format(c.budgetAmount)}`}
+                      </span>
+                      {(c.percentUsed ?? 0) >= 80 && <StatusBadge percentUsed={c.percentUsed} />}
+                    </div>
                   </div>
                   {c.budgetAmount !== null && (
                     <div className="h-2.5 overflow-hidden rounded-full bg-surface-alt">
