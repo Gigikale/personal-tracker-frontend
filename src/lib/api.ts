@@ -133,6 +133,9 @@ export const householdsApi = {
   listBudgets: (id: string) => apiClient.get<HouseholdBudget[]>(`/households/${id}/budgets`).then((r) => r.data),
   createBudget: (id: string, data: { amount: number; month: number; year: number }) =>
     apiClient.post<HouseholdBudget>(`/households/${id}/budgets`, data).then((r) => r.data),
+  updateBudget: (id: string, budgetId: string, data: { amount: number }) =>
+    apiClient.patch<HouseholdBudget>(`/households/${id}/budgets/${budgetId}`, data).then((r) => r.data),
+  removeBudget: (id: string, budgetId: string) => apiClient.delete(`/households/${id}/budgets/${budgetId}`),
   summary: (id: string, params?: { month?: number; year?: number }) =>
     apiClient
       .get<HouseholdBudgetSummary>(`/households/${id}/budgets/summary`, { params })

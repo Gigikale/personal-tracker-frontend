@@ -9,6 +9,7 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
+import { EditIcon, TrashIcon } from '../../components/ui/icons'
 
 const now = new Date()
 
@@ -30,6 +31,7 @@ export function HouseholdDetailPage() {
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [budgetAmount, setBudgetAmount] = useState('')
   const [budgetError, setBudgetError] = useState<string | null>(null)
+  const [editingBudget, setEditingBudget] = useState(false)
 
   function load() {
     if (!id) return
@@ -82,6 +84,30 @@ export function HouseholdDetailPage() {
     }
   }
 
+  function openEditBudget() {
+    setBudgetAmount(String(summary!.budgetAmount ?? ''))
+    setBudgetError(null)
+    setEditingBudget(true)
+  }
+
+  async function handleUpdateBudget(e: FormEvent) {
+    e.preventDefault()
+    setBudgetError(null)
+    try {
+      await householdsApi.updateBudget(id!, summary!.budgetId!, { amount: Number(budgetAmount) })
+      setEditingBudget(false)
+      load()
+    } catch {
+      setBudgetError('Could not save changes.')
+    }
+  }
+
+  async function handleDeleteBudget() {
+    if (!confirm('Delete this shared budget for the month?')) return
+    await householdsApi.removeBudget(id!, summary!.budgetId!)
+    load()
+  }
+
   return (
     <div>
       <Link to="/households" className="mb-4 inline-block text-sm font-semibold text-ink-muted hover:text-ink">
@@ -91,7 +117,29 @@ export function HouseholdDetailPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <h3 className="mb-4 font-display text-base font-bold text-ink">Shared budget this month</h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-display text-base font-bold text-ink">Shared budget this month</h3>
+            {summary.budgetAmount !== null && !editingBudget && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={openEditBudget}
+                  title="Edit shared budget"
+                  aria-label="Edit shared budget"
+                  className="text-ink-muted hover:text-brand-from"
+                >
+                  <EditIcon width={16} height={16} />
+                </button>
+                <button
+                  onClick={handleDeleteBudget}
+                  title="Delete shared budget"
+                  aria-label="Delete shared budget"
+                  className="text-ink-muted hover:text-accent-coral"
+                >
+                  <TrashIcon width={16} height={16} />
+                </button>
+              </div>
+            )}
+          </div>
 
           {summary.budgetAmount === null ? (
             <form onSubmit={handleSetBudget} className="flex items-end gap-3">
@@ -108,6 +156,26 @@ export function HouseholdDetailPage() {
                 />
               </div>
               <Button type="submit">Set budget</Button>
+            </form>
+          ) : editingBudget ? (
+            <form onSubmit={handleUpdateBudget} className="flex items-end gap-3">
+              <div className="flex-1">
+                <Input
+                  label="Monthly budget amount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  required
+                  autoFocus
+                  value={budgetAmount}
+                  onChange={(e) => setBudgetAmount(e.target.value)}
+                  placeholder="1500.00"
+                />
+              </div>
+              <Button type="submit">Save</Button>
+              <Button type="button" variant="secondary" onClick={() => setEditingBudget(false)}>
+                Cancel
+              </Button>
             </form>
           ) : (
             <>

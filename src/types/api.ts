@@ -113,6 +113,7 @@ export interface HouseholdBudget {
 }
 
 export interface HouseholdBudgetSummary {
+  budgetId: string | null
   month: number
   year: number
   budgetAmount: number | null
