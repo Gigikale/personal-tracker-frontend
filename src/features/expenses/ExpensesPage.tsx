@@ -12,10 +12,13 @@ import { Modal } from '../../components/ui/Modal'
 import { DownloadIcon, EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
 const emptyForm = { categoryId: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) }
+const PAGE_SIZE = 25
 
 export function ExpensesPage() {
   const { format } = useCurrency()
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -28,17 +31,27 @@ export function ExpensesPage() {
   function load() {
     setLoading(true)
     Promise.all([
-      expensesApi.list(categoryFilter ? { categoryId: categoryFilter } : undefined),
+      expensesApi.list({ ...(categoryFilter ? { categoryId: categoryFilter } : {}), page, limit: PAGE_SIZE }),
       categoriesApi.list(),
     ])
       .then(([e, c]) => {
-        setExpenses(e)
+        setExpenses(e.data)
+        setTotal(e.total)
         setCategories(c)
       })
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [categoryFilter])
+  useEffect(load, [categoryFilter, page])
+
+  function handleCategoryFilterChange(value: string) {
+    setCategoryFilter(value)
+    setPage(1)
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const rangeEnd = Math.min(page * PAGE_SIZE, total)
 
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? 'Unknown'
 
@@ -129,7 +142,7 @@ export function ExpensesPage() {
       <div className="mb-4">
         <select
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          onChange={(e) => handleCategoryFilterChange(e.target.value)}
           className="rounded-xl border border-line bg-surface-alt px-3 py-2 text-sm font-semibold text-ink"
         >
           <option value="">All categories</option>
@@ -189,6 +202,35 @@ export function ExpensesPage() {
             </tbody>
           </table>
         </Card>
+      )}
+
+      {!loading && total > PAGE_SIZE && (
+        <div className="mt-4 flex items-center justify-between text-sm text-ink-muted">
+          <span>
+            Showing {rangeStart}–{rangeEnd} of {total}
+          </span>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              className="!px-3 !py-1.5 text-xs"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <span className="text-xs font-semibold text-ink">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              className="!px-3 !py-1.5 text-xs"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
 
       {showModal && (

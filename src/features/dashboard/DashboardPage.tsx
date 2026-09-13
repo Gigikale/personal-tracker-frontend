@@ -38,10 +38,10 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([budgetsApi.summary(), expensesApi.list(), categoriesApi.list()])
+    Promise.all([budgetsApi.summary(), expensesApi.list({ limit: 6 }), categoriesApi.list()])
       .then(([s, e, c]) => {
         setSummary(s)
-        setExpenses(e.slice(0, 6))
+        setExpenses(e.data)
         setCategories(c)
       })
       .finally(() => setLoading(false))

@@ -50,8 +50,11 @@ export const categoriesApi = {
 }
 
 export const expensesApi = {
-  list: (params?: { categoryId?: string; from?: string; to?: string }) =>
-    apiClient.get<Expense[]>('/expenses', { params }).then((r) => r.data),
+  list: (params?: { categoryId?: string; from?: string; to?: string; page?: number; limit?: number }) =>
+    apiClient.get<Expense[]>('/expenses', { params }).then((r) => ({
+      data: r.data,
+      total: Number(r.headers['x-total-count'] ?? r.data.length),
+    })),
   create: (data: { categoryId: string; amount: number; description?: string; date: string }) =>
     apiClient.post<Expense>('/expenses', data).then((r) => r.data),
   update: (id: string, data: Partial<{ categoryId: string; amount: number; description: string; date: string }>) =>
