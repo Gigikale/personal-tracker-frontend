@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { notificationsApi } from '../../lib/api'
 import { useAuthStore } from '../../stores/authStore'
@@ -10,10 +10,12 @@ import {
   BellIcon,
   BudgetIcon,
   CategoryIcon,
+  CloseIcon,
   DashboardIcon,
   ExpenseIcon,
   HouseholdIcon,
   LogoutIcon,
+  MenuIcon,
   MoonIcon,
   RecurringIcon,
   SavingsIcon,
@@ -38,7 +40,13 @@ export function AppShell() {
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
   const navigate = useNavigate()
+  const location = useLocation()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
 
   useEffect(() => {
     notificationsApi
@@ -69,15 +77,48 @@ export function AppShell() {
   }
 
   return (
-    <div className="flex min-h-screen bg-bg">
-      <aside className="flex w-60 flex-shrink-0 flex-col border-r border-line bg-surface px-4 py-6">
-        <div className="mb-8 flex items-center gap-2 px-2">
-          <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
-            <rect x="2" y="14" width="6" height="10" rx="2" fill="#F59E0B" />
-            <rect x="10" y="8" width="6" height="16" rx="2" fill="#4F46E5" />
-            <rect x="18" y="2" width="6" height="22" rx="2" fill="#FB7185" />
-          </svg>
-          <span className="font-display text-[15px] font-bold text-ink">Personal Tracker</span>
+    <div className="flex min-h-screen flex-col bg-bg md:flex-row">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 md:hidden">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          className="p-1 text-ink-muted transition-colors hover:text-ink"
+        >
+          <MenuIcon width={22} height={22} />
+        </button>
+        <span className="font-display text-[15px] font-bold text-ink">Personal Tracker</span>
+        <span className="w-[22px]" />
+      </header>
+
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-shrink-0 flex-col overflow-y-auto border-r border-line bg-surface px-4 py-6 transition-transform duration-200 md:static md:z-auto md:w-60 md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="mb-8 flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+              <rect x="2" y="14" width="6" height="10" rx="2" fill="#F59E0B" />
+              <rect x="10" y="8" width="6" height="16" rx="2" fill="#4F46E5" />
+              <rect x="18" y="2" width="6" height="22" rx="2" fill="#FB7185" />
+            </svg>
+            <span className="font-display text-[15px] font-bold text-ink">Personal Tracker</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+            className="p-1 text-ink-muted transition-colors hover:text-ink md:hidden"
+          >
+            <CloseIcon width={18} height={18} />
+          </button>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
@@ -175,7 +216,7 @@ export function AppShell() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto px-8 py-8">
+      <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
         <div className="mx-auto max-w-5xl">
           <Outlet />
         </div>

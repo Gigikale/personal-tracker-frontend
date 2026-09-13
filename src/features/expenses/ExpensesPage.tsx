@@ -125,7 +125,7 @@ export function ExpensesPage() {
         title="Expenses"
         description="Everything you've logged, newest first."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => handleExport('csv')} className="flex items-center gap-1.5">
               <DownloadIcon width={16} height={16} /> CSV
             </Button>
@@ -159,8 +159,8 @@ export function ExpensesPage() {
       ) : expenses.length === 0 ? (
         <Card className="text-center text-sm text-ink-muted">No expenses yet — add your first one.</Card>
       ) : (
-        <Card className="p-0">
-          <table className="w-full text-sm">
+        <Card className="overflow-x-auto p-0">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs font-bold uppercase tracking-wide text-ink-muted">
                 <th className="px-4 py-3">Date</th>
@@ -205,7 +205,7 @@ export function ExpensesPage() {
       )}
 
       {!loading && total > PAGE_SIZE && (
-        <div className="mt-4 flex items-center justify-between text-sm text-ink-muted">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-muted">
           <span>
             Showing {rangeStart}–{rangeEnd} of {total}
           </span>

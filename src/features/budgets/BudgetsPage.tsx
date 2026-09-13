@@ -99,8 +99,8 @@ export function BudgetsPage() {
       ) : budgets.length === 0 ? (
         <Card className="text-center text-sm text-ink-muted">No budgets yet — create your first one.</Card>
       ) : (
-        <Card className="p-0">
-          <table className="w-full text-sm">
+        <Card className="overflow-x-auto p-0">
+          <table className="w-full min-w-[480px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs font-bold uppercase tracking-wide text-ink-muted">
                 <th className="px-4 py-3">Category</th>
