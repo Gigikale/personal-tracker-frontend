@@ -120,5 +120,6 @@ export interface HouseholdBudgetSummary {
   actualSpent: number
   remaining: number | null
   percentUsed: number | null
-  byMember: { userId: string; name: string; spent: number }[]
+  hasMixedCurrencies: boolean
+  byMember: { userId: string; name: string; currency: CurrencyCode; spent: number }[]
 }

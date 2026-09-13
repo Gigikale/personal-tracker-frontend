@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { householdsApi } from '../../lib/api'
 import { useAuthStore } from '../../stores/authStore'
 import { useCurrency } from '../../hooks/useCurrency'
+import { formatMoney } from '../../lib/currency'
 import type { Household, HouseholdBudgetSummary } from '../../types/api'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -141,6 +142,13 @@ export function HouseholdDetailPage() {
             )}
           </div>
 
+          {summary.hasMixedCurrencies && (
+            <p className="mb-4 rounded-lg border border-accent-amber/40 bg-accent-amber/10 px-3 py-2 text-xs font-semibold text-accent-amber">
+              Members of this household use different currencies. The combined totals below add up raw amounts
+              without converting between currencies, so treat them as approximate — check each member's own spend
+              for an accurate figure.
+            </p>
+          )}
           {summary.budgetAmount === null ? (
             <form onSubmit={handleSetBudget} className="flex items-end gap-3">
               <div className="flex-1">
@@ -197,7 +205,7 @@ export function HouseholdDetailPage() {
                 {summary.byMember.map((m) => (
                   <div key={m.userId} className="flex items-center justify-between text-sm">
                     <span className="text-ink">{m.name}</span>
-                    <span className="font-bold text-ink">{format(m.spent)}</span>
+                    <span className="font-bold text-ink">{formatMoney(m.spent, m.currency)}</span>
                   </div>
                 ))}
               </div>
