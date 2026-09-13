@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import { useThemeStore } from './stores/themeStore'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
@@ -16,6 +16,7 @@ import { HouseholdsPage } from './features/households/HouseholdsPage'
 import { HouseholdDetailPage } from './features/households/HouseholdDetailPage'
 import { NotificationsPage } from './features/notifications/NotificationsPage'
 import { SettingsPage } from './features/settings/SettingsPage'
+import { NotFoundPage } from './features/notFound/NotFoundPage'
 
 function App() {
   const theme = useThemeStore((s) => s.theme)
@@ -42,10 +43,9 @@ function App() {
             <Route path="/households/:id" element={<HouseholdDetailPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )
