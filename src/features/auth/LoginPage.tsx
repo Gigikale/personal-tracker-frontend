@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 
 import { authApi } from '../../lib/api'
@@ -7,15 +7,18 @@ import { useAuthStore } from '../../stores/authStore'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { OAuthComingSoon } from './OAuthComingSoon'
+import { SocialSignIn } from './SocialSignIn'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const setSession = useAuthStore((s) => s.setSession)
+  const [searchParams] = useSearchParams()
 
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(
+    searchParams.get('error') === 'oauth_failed' ? 'That sign-in attempt failed. Please try again.' : null,
+  )
   const [submitting, setSubmitting] = useState(false)
 
   function updateField(field: keyof typeof form) {
@@ -83,9 +86,9 @@ export function LoginPage() {
             <label htmlFor="password" className="block text-sm font-bold text-ink">
               Password
             </label>
-            <span title="Coming soon — needs email delivery" className="cursor-not-allowed text-xs font-semibold text-ink-muted/60">
+            <Link to="/forgot-password" className="text-xs font-semibold text-brand-from hover:text-accent-amber-hover">
               Forgot password?
-            </span>
+            </Link>
           </div>
           <Input
             id="password"
@@ -102,7 +105,7 @@ export function LoginPage() {
         </Button>
       </form>
 
-      <OAuthComingSoon />
+      <SocialSignIn />
 
       <p className="mt-6 text-center text-sm text-ink-muted">
         Don't have an account?{' '}

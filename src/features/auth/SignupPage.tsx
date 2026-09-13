@@ -7,7 +7,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
-import { OAuthComingSoon } from './OAuthComingSoon'
+import { SocialSignIn } from './SocialSignIn'
 
 function passwordStrength(password: string) {
   if (!password) return null
@@ -145,7 +145,7 @@ export function SignupPage() {
         </Button>
       </form>
 
-      <OAuthComingSoon />
+      <SocialSignIn />
 
       <p className="mt-6 text-center text-sm text-ink-muted">
         Already have an account?{' '}

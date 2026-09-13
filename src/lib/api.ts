@@ -33,6 +33,10 @@ export const authApi = {
     apiClient.post<AuthResult>('/auth/login', data).then((r) => r.data),
 
   logout: (refreshToken: string) => apiClient.post('/auth/logout', { refreshToken }),
+
+  forgotPassword: (email: string) => apiClient.post('/auth/forgot-password', { email }),
+
+  resetPassword: (token: string, password: string) => apiClient.post('/auth/reset-password', { token, password }),
 }
 
 export const usersApi = {
