@@ -103,6 +103,7 @@ export interface Household {
   name: string
   ownerId: string
   members: HouseholdMember[]
+  invitedPending?: boolean
 }
 
 export interface HouseholdBudget {

@@ -30,6 +30,7 @@ export function HouseholdDetailPage() {
   const [loading, setLoading] = useState(true)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteError, setInviteError] = useState<string | null>(null)
+  const [inviteNotice, setInviteNotice] = useState<string | null>(null)
   const [budgetAmount, setBudgetAmount] = useState('')
   const [budgetError, setBudgetError] = useState<string | null>(null)
   const [editingBudget, setEditingBudget] = useState(false)
@@ -54,12 +55,18 @@ export function HouseholdDetailPage() {
   async function handleInvite(e: FormEvent) {
     e.preventDefault()
     setInviteError(null)
+    setInviteNotice(null)
     try {
-      await householdsApi.addMember(id!, inviteEmail)
+      const result = await householdsApi.addMember(id!, inviteEmail)
+      setInviteNotice(
+        result.invitedPending
+          ? "Invite sent — they'll be added automatically once they sign up."
+          : 'Member added.',
+      )
       setInviteEmail('')
       load()
     } catch {
-      setInviteError('Could not add that member — check the email or they may already be added.')
+      setInviteError('Could not add that member — they may already be added.')
     }
   }
 
@@ -255,6 +262,7 @@ export function HouseholdDetailPage() {
                 </Button>
               </div>
               {inviteError && <p className="text-xs font-semibold text-accent-coral">{inviteError}</p>}
+              {inviteNotice && <p className="text-xs font-semibold text-brand-from">{inviteNotice}</p>}
             </form>
           )}
         </Card>
