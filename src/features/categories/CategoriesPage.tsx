@@ -2,12 +2,14 @@ import { useEffect, useState, type FormEvent } from 'react'
 
 import { categoriesApi } from '../../lib/api'
 import type { Category } from '../../types/api'
+import { CATEGORY_COLOR_OPTIONS, CATEGORY_ICON_OPTIONS, fallbackCategoryColor } from '../../lib/categoryVisuals'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
-import { EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
+import { CategoryIcon, EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
 export function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -15,6 +17,8 @@ export function CategoriesPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
+  const [icon, setIcon] = useState('')
+  const [color, setColor] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -31,6 +35,8 @@ export function CategoriesPage() {
   function openCreate() {
     setEditingId(null)
     setName('')
+    setIcon('')
+    setColor('')
     setError(null)
     setShowModal(true)
   }
@@ -38,6 +44,8 @@ export function CategoriesPage() {
   function openEdit(category: Category) {
     setEditingId(category.id)
     setName(category.name)
+    setIcon(category.icon ?? '')
+    setColor(category.color ?? '')
     setError(null)
     setShowModal(true)
   }
@@ -47,10 +55,11 @@ export function CategoriesPage() {
     setError(null)
     setSubmitting(true)
     try {
+      const payload = { name, icon: icon || undefined, color: color || undefined }
       if (editingId) {
-        await categoriesApi.update(editingId, { name })
+        await categoriesApi.update(editingId, payload)
       } else {
-        await categoriesApi.create({ name })
+        await categoriesApi.create(payload)
       }
       setName('')
       setShowModal(false)
@@ -73,6 +82,7 @@ export function CategoriesPage() {
       <PageHeader
         title="Categories"
         description="Group your expenses so budgets and reports make sense."
+        icon={<CategoryIcon width={20} height={20} />}
         action={
           <Button onClick={openCreate} className="flex items-center gap-1.5">
             <PlusIcon width={16} height={16} /> New category
@@ -88,8 +98,11 @@ export function CategoriesPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {categories.map((c) => (
             <Card key={c.id} className="flex items-center justify-between">
-              <span className="font-semibold text-ink">{c.name}</span>
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <CategoryBadge category={c} />
+                <span className="truncate font-semibold text-ink">{c.name}</span>
+              </div>
+              <div className="flex flex-shrink-0 items-center gap-2">
                 <button
                   onClick={() => openEdit(c)}
                   title="Edit category"
@@ -123,6 +136,49 @@ export function CategoriesPage() {
               autoFocus
               required
             />
+
+            <div>
+              <label className="mb-1.5 block text-sm font-bold text-ink">Icon (optional)</label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORY_ICON_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setIcon(icon === option ? '' : option)}
+                    aria-label={`Use icon ${option}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg border-2 text-lg transition-colors ${
+                      icon === option ? 'border-brand-from bg-brand-from/10' : 'border-line bg-surface-alt'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-bold text-ink">Color (optional)</label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORY_COLOR_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setColor(color === option ? '' : option)}
+                    aria-label={`Use color ${option}`}
+                    className={`h-8 w-8 rounded-full border-2 transition-transform ${
+                      color === option ? 'scale-110 border-ink' : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: option }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface-alt px-3.5 py-2.5">
+              <CategoryBadge category={{ name: name || 'Category', icon, color: color || fallbackCategoryColor(name || 'Category') }} />
+              <span className="text-sm text-ink-muted">Preview</span>
+            </div>
+
             {error && <p className="text-sm font-semibold text-accent-coral">{error}</p>}
             <Button type="submit" disabled={submitting}>
               {submitting ? 'Saving…' : editingId ? 'Save changes' : 'Create category'}

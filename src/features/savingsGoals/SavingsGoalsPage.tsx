@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
-import { EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
+import { EditIcon, PlusIcon, SavingsIcon, TrashIcon } from '../../components/ui/icons'
 
 const emptyForm = { name: '', targetAmount: '', targetDate: '' }
 
@@ -98,6 +98,7 @@ export function SavingsGoalsPage() {
       <PageHeader
         title="Savings Goals"
         description="Set a target and chip away at it."
+        icon={<SavingsIcon width={20} height={20} />}
         action={
           <Button onClick={openCreate} className="flex items-center gap-1.5">
             <PlusIcon width={16} height={16} /> New goal

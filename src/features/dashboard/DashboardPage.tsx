@@ -6,6 +6,7 @@ import { useCurrency } from '../../hooks/useCurrency'
 import type { BudgetSummary, Category, Expense } from '../../types/api'
 import { Card } from '../../components/ui/Card'
 import { PageHeader } from '../../components/ui/PageHeader'
+import { DashboardIcon } from '../../components/ui/icons'
 
 function barColor(percentUsed: number | null) {
   if (percentUsed === null) return 'bg-ink-muted/40'
@@ -85,7 +86,7 @@ export function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" description={monthLabel} />
+      <PageHeader title="Dashboard" description={monthLabel} icon={<DashboardIcon width={20} height={20} />} />
 
       <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card>

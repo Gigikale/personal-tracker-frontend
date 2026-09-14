@@ -8,7 +8,8 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
-import { EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
+import { CategoryBadge } from '../../components/ui/CategoryBadge'
+import { EditIcon, PlusIcon, RecurringIcon, TrashIcon } from '../../components/ui/icons'
 
 const frequencies: RecurrenceFrequency[] = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']
 
@@ -44,7 +45,8 @@ export function RecurringExpensesPage() {
 
   useEffect(load, [])
 
-  const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? 'Unknown'
+  const categoryFor = (id: string) => categories.find((c) => c.id === id)
+  const categoryName = (id: string) => categoryFor(id)?.name ?? 'Unknown'
 
   function openCreate() {
     setEditingId(null)
@@ -114,6 +116,7 @@ export function RecurringExpensesPage() {
       <PageHeader
         title="Recurring Expenses"
         description="Subscriptions and bills that repeat automatically."
+        icon={<RecurringIcon width={20} height={20} />}
         action={
           <Button onClick={openCreate} className="flex items-center gap-1.5">
             <PlusIcon width={16} height={16} /> New recurring expense
@@ -128,13 +131,16 @@ export function RecurringExpensesPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
-            <Card key={item.id} className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-ink">{item.description || categoryName(item.categoryId)}</p>
-                <p className="text-xs text-ink-muted">
-                  {categoryName(item.categoryId)} · {item.frequency.toLowerCase()} · {format(Number(item.amount))} ·
-                  next {item.nextRunDate.slice(0, 10)}
-                </p>
+            <Card key={item.id} className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                {categoryFor(item.categoryId) && <CategoryBadge category={categoryFor(item.categoryId)!} />}
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-ink">{item.description || categoryName(item.categoryId)}</p>
+                  <p className="truncate text-xs text-ink-muted">
+                    {categoryName(item.categoryId)} · {item.frequency.toLowerCase()} · {format(Number(item.amount))} ·
+                    next {item.nextRunDate.slice(0, 10)}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <button

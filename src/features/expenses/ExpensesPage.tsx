@@ -9,7 +9,8 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
-import { DownloadIcon, EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
+import { CategoryBadge } from '../../components/ui/CategoryBadge'
+import { DownloadIcon, EditIcon, ExpenseIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
 const emptyForm = { categoryId: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) }
 const PAGE_SIZE = 25
@@ -53,7 +54,8 @@ export function ExpensesPage() {
   const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const rangeEnd = Math.min(page * PAGE_SIZE, total)
 
-  const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? 'Unknown'
+  const categoryFor = (id: string) => categories.find((c) => c.id === id)
+  const categoryName = (id: string) => categoryFor(id)?.name ?? 'Unknown'
 
   function openCreate() {
     setEditingId(null)
@@ -124,6 +126,7 @@ export function ExpensesPage() {
       <PageHeader
         title="Expenses"
         description="Everything you've logged, newest first."
+        icon={<ExpenseIcon width={20} height={20} />}
         action={
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => handleExport('csv')} className="flex items-center gap-1.5">
@@ -174,7 +177,14 @@ export function ExpensesPage() {
               {expenses.map((expense) => (
                 <tr key={expense.id} className="border-b border-line last:border-0">
                   <td className="px-4 py-3 text-ink-muted">{expense.date.slice(0, 10)}</td>
-                  <td className="px-4 py-3 font-semibold text-ink">{categoryName(expense.categoryId)}</td>
+                  <td className="px-4 py-3 font-semibold text-ink">
+                    <div className="flex items-center gap-2">
+                      {categoryFor(expense.categoryId) && (
+                        <CategoryBadge category={categoryFor(expense.categoryId)!} size={24} />
+                      )}
+                      {categoryName(expense.categoryId)}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-ink-muted">{expense.description ?? '—'}</td>
                   <td className="px-4 py-3 text-right font-bold text-ink">{format(Number(expense.amount))}</td>
                   <td className="px-4 py-3 text-right">

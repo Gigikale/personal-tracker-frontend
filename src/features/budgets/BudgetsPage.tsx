@@ -8,7 +8,8 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
-import { EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
+import { CategoryBadge } from '../../components/ui/CategoryBadge'
+import { BudgetIcon, EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
 const now = new Date()
 const emptyForm = { categoryId: '', amount: '', month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
@@ -36,7 +37,8 @@ export function BudgetsPage() {
 
   useEffect(load, [])
 
-  const categoryName = (id: string | null) => (id ? categories.find((c) => c.id === id)?.name ?? 'Unknown' : 'Overall')
+  const categoryFor = (id: string | null) => (id ? categories.find((c) => c.id === id) : undefined)
+  const categoryName = (id: string | null) => (id ? categoryFor(id)?.name ?? 'Unknown' : 'Overall')
 
   function openCreate() {
     setEditingId(null)
@@ -87,6 +89,7 @@ export function BudgetsPage() {
       <PageHeader
         title="Budgets"
         description="Set monthly limits, overall or per category."
+        icon={<BudgetIcon width={20} height={20} />}
         action={
           <Button onClick={openCreate} className="flex items-center gap-1.5">
             <PlusIcon width={16} height={16} /> New budget
@@ -112,7 +115,12 @@ export function BudgetsPage() {
             <tbody>
               {budgets.map((b) => (
                 <tr key={b.id} className="border-b border-line last:border-0">
-                  <td className="px-4 py-3 font-semibold text-ink">{categoryName(b.categoryId)}</td>
+                  <td className="px-4 py-3 font-semibold text-ink">
+                    <div className="flex items-center gap-2">
+                      {categoryFor(b.categoryId) && <CategoryBadge category={categoryFor(b.categoryId)!} size={24} />}
+                      {categoryName(b.categoryId)}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-ink-muted">
                     {b.month}/{b.year}
                   </td>

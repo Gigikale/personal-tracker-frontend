@@ -10,7 +10,7 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
-import { EditIcon, TrashIcon } from '../../components/ui/icons'
+import { EditIcon, HouseholdIcon, TrashIcon } from '../../components/ui/icons'
 
 const now = new Date()
 
@@ -121,7 +121,11 @@ export function HouseholdDetailPage() {
       <Link to="/households" className="mb-4 inline-block text-sm font-semibold text-ink-muted hover:text-ink">
         ← Households
       </Link>
-      <PageHeader title={household.name} description={`${household.members.length} member(s)`} />
+      <PageHeader
+        title={household.name}
+        description={`${household.members.length} member(s)`}
+        icon={<HouseholdIcon width={20} height={20} />}
+      />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Card className="lg:col-span-2">

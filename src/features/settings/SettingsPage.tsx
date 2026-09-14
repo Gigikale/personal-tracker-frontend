@@ -6,6 +6,7 @@ import { CURRENCIES } from '../../lib/currency'
 import type { CurrencyCode } from '../../types/api'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Card } from '../../components/ui/Card'
+import { SettingsIcon } from '../../components/ui/icons'
 
 export function SettingsPage() {
   const user = useAuthStore((s) => s.user)
@@ -29,7 +30,11 @@ export function SettingsPage() {
 
   return (
     <div>
-      <PageHeader title="Settings" description="Personalize how amounts are shown across the app." />
+      <PageHeader
+        title="Settings"
+        description="Personalize how amounts are shown across the app."
+        icon={<SettingsIcon width={20} height={20} />}
+      />
 
       <Card className="max-w-xl">
         <h3 className="mb-1 font-display text-base font-bold text-ink">Currency</h3>

@@ -5,7 +5,7 @@ import type { Notification } from '../../types/api'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { TrashIcon } from '../../components/ui/icons'
+import { BellIcon, TrashIcon } from '../../components/ui/icons'
 
 export function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -43,6 +43,7 @@ export function NotificationsPage() {
       <PageHeader
         title="Notifications"
         description="Budget alerts and recurring expense activity."
+        icon={<BellIcon width={20} height={20} />}
         action={
           hasUnread ? (
             <Button variant="secondary" onClick={handleMarkAllRead}>

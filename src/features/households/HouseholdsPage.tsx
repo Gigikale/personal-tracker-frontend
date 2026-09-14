@@ -80,6 +80,7 @@ export function HouseholdsPage() {
       <PageHeader
         title="Households"
         description="Share a budget with your partner or family."
+        icon={<HouseholdIcon width={20} height={20} />}
         action={
           <Button onClick={openCreate} className="flex items-center gap-1.5">
             <PlusIcon width={16} height={16} /> New household
