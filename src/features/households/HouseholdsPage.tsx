@@ -100,7 +100,7 @@ export function HouseholdsPage() {
             const isOwner = h.ownerId === user?.id
             return (
               <Link key={h.id} to={`/households/${h.id}`}>
-                <Card className="flex items-center gap-3 transition-colors hover:border-brand-from">
+                <Card className="flex items-center gap-3 transition hover:-translate-y-0.5 hover:border-brand-from hover:shadow-md">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-from/10 text-brand-from">
                     <HouseholdIcon width={18} height={18} />
                   </div>
