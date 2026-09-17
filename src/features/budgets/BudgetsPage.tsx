@@ -24,6 +24,7 @@ export function BudgetsPage() {
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   function load() {
     setLoading(true)
@@ -80,8 +81,13 @@ export function BudgetsPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this budget?')) return
-    await budgetsApi.remove(id)
-    load()
+    setActionError(null)
+    try {
+      await budgetsApi.remove(id)
+      load()
+    } catch {
+      setActionError('Could not delete that budget. Please try again.')
+    }
   }
 
   return (
@@ -96,6 +102,8 @@ export function BudgetsPage() {
           </Button>
         }
       />
+
+      {actionError && <p className="mb-3 text-sm font-semibold text-accent-coral">{actionError}</p>}
 
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>

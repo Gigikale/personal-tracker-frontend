@@ -34,6 +34,7 @@ export function HouseholdDetailPage() {
   const [budgetAmount, setBudgetAmount] = useState('')
   const [budgetError, setBudgetError] = useState<string | null>(null)
   const [editingBudget, setEditingBudget] = useState(false)
+  const [memberError, setMemberError] = useState<string | null>(null)
 
   function load() {
     if (!id) return
@@ -72,8 +73,13 @@ export function HouseholdDetailPage() {
 
   async function handleRemove(userId: string) {
     if (!confirm('Remove this member?')) return
-    await householdsApi.removeMember(id!, userId)
-    load()
+    setMemberError(null)
+    try {
+      await householdsApi.removeMember(id!, userId)
+      load()
+    } catch {
+      setMemberError('Could not remove that member. Please try again.')
+    }
   }
 
   async function handleSetBudget(e: FormEvent) {
@@ -112,8 +118,13 @@ export function HouseholdDetailPage() {
 
   async function handleDeleteBudget() {
     if (!confirm('Delete this shared budget for the month?')) return
-    await householdsApi.removeBudget(id!, summary!.budgetId!)
-    load()
+    setBudgetError(null)
+    try {
+      await householdsApi.removeBudget(id!, summary!.budgetId!)
+      load()
+    } catch {
+      setBudgetError('Could not delete the shared budget. Please try again.')
+    }
   }
 
   return (
@@ -227,6 +238,7 @@ export function HouseholdDetailPage() {
 
         <Card>
           <h3 className="mb-4 font-display text-base font-bold text-ink">Members</h3>
+          {memberError && <p className="mb-3 text-sm font-semibold text-accent-coral">{memberError}</p>}
           <ul className="mb-4 flex flex-col gap-3">
             {household.members.map((m) => (
               <li key={m.id} className="flex items-center justify-between text-sm">

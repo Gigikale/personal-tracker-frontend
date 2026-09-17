@@ -32,6 +32,7 @@ export function RecurringExpensesPage() {
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   function load() {
     setLoading(true)
@@ -101,14 +102,24 @@ export function RecurringExpensesPage() {
   }
 
   async function toggleActive(item: RecurringExpense) {
-    await recurringExpensesApi.update(item.id, { isActive: !item.isActive })
-    load()
+    setActionError(null)
+    try {
+      await recurringExpensesApi.update(item.id, { isActive: !item.isActive })
+      load()
+    } catch {
+      setActionError('Could not update that recurring expense. Please try again.')
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this recurring expense?')) return
-    await recurringExpensesApi.remove(id)
-    load()
+    setActionError(null)
+    try {
+      await recurringExpensesApi.remove(id)
+      load()
+    } catch {
+      setActionError('Could not delete that recurring expense. Please try again.')
+    }
   }
 
   return (
@@ -123,6 +134,8 @@ export function RecurringExpensesPage() {
           </Button>
         }
       />
+
+      {actionError && <p className="mb-3 text-sm font-semibold text-accent-coral">{actionError}</p>}
 
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>

@@ -10,6 +10,7 @@ import { BellIcon, TrashIcon } from '../../components/ui/icons'
 export function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   function load() {
     setLoading(true)
@@ -22,18 +23,33 @@ export function NotificationsPage() {
   useEffect(load, [])
 
   async function handleMarkRead(id: string) {
-    await notificationsApi.markRead(id)
-    load()
+    setActionError(null)
+    try {
+      await notificationsApi.markRead(id)
+      load()
+    } catch {
+      setActionError('Could not mark that as read. Please try again.')
+    }
   }
 
   async function handleMarkAllRead() {
-    await notificationsApi.markAllRead()
-    load()
+    setActionError(null)
+    try {
+      await notificationsApi.markAllRead()
+      load()
+    } catch {
+      setActionError('Could not mark all as read. Please try again.')
+    }
   }
 
   async function handleDelete(id: string) {
-    await notificationsApi.remove(id)
-    load()
+    setActionError(null)
+    try {
+      await notificationsApi.remove(id)
+      load()
+    } catch {
+      setActionError('Could not delete that notification. Please try again.')
+    }
   }
 
   const hasUnread = notifications.some((n) => !n.isRead)
@@ -52,6 +68,8 @@ export function NotificationsPage() {
           ) : undefined
         }
       />
+
+      {actionError && <p className="mb-3 text-sm font-semibold text-accent-coral">{actionError}</p>}
 
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>
@@ -75,7 +93,12 @@ export function NotificationsPage() {
                     Mark read
                   </button>
                 )}
-                <button onClick={() => handleDelete(n.id)} className="text-ink-muted hover:text-accent-coral">
+                <button
+                  onClick={() => handleDelete(n.id)}
+                  title="Delete notification"
+                  aria-label="Delete notification"
+                  className="text-ink-muted hover:text-accent-coral"
+                >
                   <TrashIcon width={16} height={16} />
                 </button>
               </div>

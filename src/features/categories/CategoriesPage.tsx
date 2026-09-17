@@ -21,6 +21,7 @@ export function CategoriesPage() {
   const [color, setColor] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   function load() {
     setLoading(true)
@@ -73,8 +74,13 @@ export function CategoriesPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this category?')) return
-    await categoriesApi.remove(id)
-    load()
+    setActionError(null)
+    try {
+      await categoriesApi.remove(id)
+      load()
+    } catch {
+      setActionError('Could not delete that category. Please try again.')
+    }
   }
 
   return (
@@ -89,6 +95,8 @@ export function CategoriesPage() {
           </Button>
         }
       />
+
+      {actionError && <p className="mb-3 text-sm font-semibold text-accent-coral">{actionError}</p>}
 
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>

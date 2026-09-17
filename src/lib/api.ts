@@ -64,10 +64,6 @@ export const expensesApi = {
   update: (id: string, data: Partial<{ categoryId: string; amount: number; description: string; date: string }>) =>
     apiClient.patch<Expense>(`/expenses/${id}`, data).then((r) => r.data),
   remove: (id: string) => apiClient.delete(`/expenses/${id}`),
-  exportUrl: (format: 'csv' | 'pdf', params?: { categoryId?: string; from?: string; to?: string }) => {
-    const search = new URLSearchParams({ format, ...params })
-    return `${apiClient.defaults.baseURL}/expenses/export?${search.toString()}`
-  },
 }
 
 export const budgetsApi = {

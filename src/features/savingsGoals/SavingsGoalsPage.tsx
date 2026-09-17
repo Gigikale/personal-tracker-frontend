@@ -20,8 +20,10 @@ export function SavingsGoalsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [contributions, setContributions] = useState<Record<string, string>>({})
+  const [contributeErrors, setContributeErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   function load() {
     setLoading(true)
@@ -78,19 +80,25 @@ export function SavingsGoalsPage() {
   async function handleContribute(id: string) {
     const amount = Number(contributions[id])
     if (!amount) return
+    setContributeErrors((p) => ({ ...p, [id]: '' }))
     try {
       await savingsGoalsApi.contribute(id, amount)
       setContributions((p) => ({ ...p, [id]: '' }))
       load()
     } catch {
-      alert('That would take the balance below 0.')
+      setContributeErrors((p) => ({ ...p, [id]: 'That would take the balance below 0.' }))
     }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this savings goal?')) return
-    await savingsGoalsApi.remove(id)
-    load()
+    setActionError(null)
+    try {
+      await savingsGoalsApi.remove(id)
+      load()
+    } catch {
+      setActionError('Could not delete that savings goal. Please try again.')
+    }
   }
 
   return (
@@ -105,6 +113,8 @@ export function SavingsGoalsPage() {
           </Button>
         }
       />
+
+      {actionError && <p className="mb-3 text-sm font-semibold text-accent-coral">{actionError}</p>}
 
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>
@@ -157,6 +167,9 @@ export function SavingsGoalsPage() {
                     Add
                   </Button>
                 </div>
+                {contributeErrors[g.id] && (
+                  <p className="mt-1.5 text-xs font-semibold text-accent-coral">{contributeErrors[g.id]}</p>
+                )}
               </Card>
             )
           })}
