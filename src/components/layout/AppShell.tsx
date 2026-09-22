@@ -77,7 +77,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg md:flex-row">
+    <div className="flex min-h-screen flex-col bg-bg md:h-screen md:flex-row md:overflow-hidden">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 md:hidden">
         <button
           onClick={() => setSidebarOpen(true)}
@@ -99,7 +99,7 @@ export function AppShell() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-shrink-0 flex-col overflow-y-auto border-r border-line bg-surface px-4 py-6 transition-transform duration-200 md:static md:z-auto md:w-60 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-shrink-0 flex-col overflow-y-auto border-r border-line bg-surface px-4 py-6 transition-transform duration-200 md:static md:z-auto md:h-screen md:w-60 md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -216,7 +216,7 @@ export function AppShell() {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
+      <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 md:h-screen md:px-8 md:py-8">
         <div className="mx-auto max-w-5xl">
           <Outlet />
         </div>
