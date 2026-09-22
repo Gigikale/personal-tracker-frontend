@@ -48,6 +48,16 @@ export interface BudgetSummary {
   categories: (BudgetSummaryLine & { categoryId: string; categoryName: string })[]
 }
 
+export interface BudgetTrendPoint {
+  month: number
+  year: number
+  budgetAmount: number | null
+  actualSpent: number
+  remaining: number | null
+  percentUsed: number | null
+  byCategory: { categoryId: string; categoryName: string; spent: number }[]
+}
+
 export type RecurrenceFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
 
 export interface RecurringExpense {

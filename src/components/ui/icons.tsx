@@ -185,3 +185,19 @@ export function CloseIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+export function ChevronLeftIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  )
+}
+
+export function ChevronRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  )
+}

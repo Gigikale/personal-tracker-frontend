@@ -2,6 +2,7 @@ import { apiClient } from './apiClient'
 import type {
   Budget,
   BudgetSummary,
+  BudgetTrendPoint,
   Category,
   CurrencyCode,
   Expense,
@@ -71,6 +72,8 @@ export const budgetsApi = {
     apiClient.get<Budget[]>('/budgets', { params }).then((r) => r.data),
   summary: (params?: { month?: number; year?: number }) =>
     apiClient.get<BudgetSummary>('/budgets/summary', { params }).then((r) => r.data),
+  trend: (months?: number) =>
+    apiClient.get<BudgetTrendPoint[]>('/budgets/trend', { params: months ? { months } : undefined }).then((r) => r.data),
   create: (data: { categoryId?: string | null; amount: number; month: number; year: number }) =>
     apiClient.post<Budget>('/budgets', data).then((r) => r.data),
   update: (id: string, data: { amount: number }) =>

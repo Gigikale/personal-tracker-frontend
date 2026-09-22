@@ -23,6 +23,8 @@ export function ExpensesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -30,10 +32,24 @@ export function ExpensesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
+  // The "to" date is inclusive of the whole day — the backend's `lte` filter compares full
+  // timestamps, so a bare UTC-midnight value would exclude anything logged later that day.
+  function toDateRangeParams() {
+    return {
+      ...(fromDate ? { from: new Date(`${fromDate}T00:00:00.000Z`).toISOString() } : {}),
+      ...(toDate ? { to: new Date(`${toDate}T23:59:59.999Z`).toISOString() } : {}),
+    }
+  }
+
   function load() {
     setLoading(true)
     Promise.all([
-      expensesApi.list({ ...(categoryFilter ? { categoryId: categoryFilter } : {}), page, limit: PAGE_SIZE }),
+      expensesApi.list({
+        ...(categoryFilter ? { categoryId: categoryFilter } : {}),
+        ...toDateRangeParams(),
+        page,
+        limit: PAGE_SIZE,
+      }),
       categoriesApi.list(),
     ])
       .then(([e, c]) => {
@@ -44,10 +60,22 @@ export function ExpensesPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [categoryFilter, page])
+  useEffect(load, [categoryFilter, fromDate, toDate, page])
 
   function handleCategoryFilterChange(value: string) {
     setCategoryFilter(value)
+    setPage(1)
+  }
+
+  function handleDateFilterChange(field: 'from' | 'to', value: string) {
+    if (field === 'from') setFromDate(value)
+    else setToDate(value)
+    setPage(1)
+  }
+
+  function clearDateFilter() {
+    setFromDate('')
+    setToDate('')
     setPage(1)
   }
 
@@ -116,7 +144,7 @@ export function ExpensesPage() {
 
   async function handleExport(format: 'csv' | 'pdf') {
     const res = await apiClient.get('/expenses/export', {
-      params: { format, ...(categoryFilter ? { categoryId: categoryFilter } : {}) },
+      params: { format, ...(categoryFilter ? { categoryId: categoryFilter } : {}), ...toDateRangeParams() },
       responseType: 'blob',
     })
     const url = URL.createObjectURL(res.data)
@@ -148,7 +176,7 @@ export function ExpensesPage() {
         }
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <select
           value={categoryFilter}
           onChange={(e) => handleCategoryFilterChange(e.target.value)}
@@ -161,6 +189,28 @@ export function ExpensesPage() {
             </option>
           ))}
         </select>
+        <input
+          type="date"
+          aria-label="From date"
+          value={fromDate}
+          max={toDate || undefined}
+          onChange={(e) => handleDateFilterChange('from', e.target.value)}
+          className="rounded-xl border border-line bg-surface-alt px-3 py-2 text-sm font-semibold text-ink"
+        />
+        <span className="text-sm text-ink-muted">to</span>
+        <input
+          type="date"
+          aria-label="To date"
+          value={toDate}
+          min={fromDate || undefined}
+          onChange={(e) => handleDateFilterChange('to', e.target.value)}
+          className="rounded-xl border border-line bg-surface-alt px-3 py-2 text-sm font-semibold text-ink"
+        />
+        {(fromDate || toDate) && (
+          <button onClick={clearDateFilter} className="text-xs font-semibold text-ink-muted hover:text-ink">
+            Clear dates
+          </button>
+        )}
       </div>
 
       {actionError && <p className="mb-3 text-sm font-semibold text-accent-coral">{actionError}</p>}
@@ -168,7 +218,11 @@ export function ExpensesPage() {
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>
       ) : expenses.length === 0 ? (
-        <Card className="text-center text-sm text-ink-muted">No expenses yet — add your first one.</Card>
+        <Card className="text-center text-sm text-ink-muted">
+          {categoryFilter || fromDate || toDate
+            ? 'No expenses match these filters.'
+            : 'No expenses yet — add your first one.'}
+        </Card>
       ) : (
         <Card className="overflow-x-auto p-0">
           <table className="w-full min-w-[640px] text-sm">

@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 
 import { budgetsApi, categoriesApi, expensesApi } from '../../lib/api'
 import { useCurrency } from '../../hooks/useCurrency'
-import type { BudgetSummary, Category, Expense } from '../../types/api'
+import type { BudgetSummary, BudgetTrendPoint, Category, Expense } from '../../types/api'
 import { Card } from '../../components/ui/Card'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { DashboardIcon } from '../../components/ui/icons'
+import { ChevronLeftIcon, ChevronRightIcon, DashboardIcon } from '../../components/ui/icons'
+
+const TREND_MONTHS = 5
 
 function barColor(percentUsed: number | null) {
   if (percentUsed === null) return 'bg-ink-muted/40'
@@ -31,21 +33,49 @@ function StatusBadge({ percentUsed }: { percentUsed: number | null }) {
   )
 }
 
+function monthShortLabel(month: number, year: number) {
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleString('en-US', { month: 'short' })
+}
+
+const now = new Date()
+const currentPeriod = { month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
+
+function addMonths(period: { month: number; year: number }, delta: number) {
+  const d = new Date(Date.UTC(period.year, period.month - 1 + delta, 1))
+  return { month: d.getUTCMonth() + 1, year: d.getUTCFullYear() }
+}
+
 export function DashboardPage() {
   const { format } = useCurrency()
+  const [period, setPeriod] = useState(currentPeriod)
   const [summary, setSummary] = useState<BudgetSummary | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [trend, setTrend] = useState<BudgetTrendPoint[] | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([budgetsApi.summary(), expensesApi.list({ limit: 6 }), categoriesApi.list()])
+    setLoading(true)
+    const periodStart = new Date(Date.UTC(period.year, period.month - 1, 1))
+    // Last instant of the period's final day, so an expense logged at any time that day is
+    // still included by the backend's inclusive `to` (lte) filter.
+    const periodEnd = new Date(Date.UTC(period.year, period.month, 0, 23, 59, 59, 999))
+
+    Promise.all([
+      budgetsApi.summary({ month: period.month, year: period.year }),
+      expensesApi.list({ from: periodStart.toISOString(), to: periodEnd.toISOString(), limit: 6 }),
+      categoriesApi.list(),
+    ])
       .then(([s, e, c]) => {
         setSummary(s)
         setExpenses(e.data)
         setCategories(c)
       })
       .finally(() => setLoading(false))
+  }, [period.month, period.year])
+
+  useEffect(() => {
+    budgetsApi.trend(TREND_MONTHS).then(setTrend)
   }, [])
 
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? 'Unknown'
@@ -55,6 +85,7 @@ export function DashboardPage() {
         year: 'numeric',
       })
     : ''
+  const isCurrentPeriod = period.month === currentPeriod.month && period.year === currentPeriod.year
 
   if (loading) return <p className="text-sm text-ink-muted">Loading…</p>
 
@@ -84,9 +115,47 @@ export function DashboardPage() {
   const topSpending = (summary?.categories ?? []).filter((c) => c.actualSpent > 0).slice(0, 6)
   const maxSpent = topSpending.length ? Math.max(...topSpending.map((c) => c.actualSpent)) : 0
 
+  const maxTrendSpent = trend?.length ? Math.max(...trend.map((p) => p.actualSpent), 0) : 0
+  const trendCategoryTotals = new Map<string, { name: string; total: number }>()
+  trend?.forEach((point) =>
+    point.byCategory.forEach((c) => {
+      const existing = trendCategoryTotals.get(c.categoryId)
+      trendCategoryTotals.set(c.categoryId, { name: c.categoryName, total: (existing?.total ?? 0) + c.spent })
+    }),
+  )
+  const topTrendCategories = Array.from(trendCategoryTotals.values())
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5)
+  const maxTrendCategoryTotal = topTrendCategories.length ? topTrendCategories[0].total : 0
+
   return (
     <div>
-      <PageHeader title="Dashboard" description={monthLabel} icon={<DashboardIcon width={20} height={20} />} />
+      <PageHeader
+        title="Dashboard"
+        icon={<DashboardIcon width={20} height={20} />}
+        action={
+          <div className="flex items-center gap-1 rounded-xl border border-line bg-surface-alt px-1.5 py-1.5">
+            <button
+              onClick={() => setPeriod((p) => addMonths(p, -1))}
+              aria-label="Previous month"
+              title="Previous month"
+              className="rounded-lg p-1.5 text-ink-muted hover:bg-line hover:text-ink"
+            >
+              <ChevronLeftIcon width={16} height={16} />
+            </button>
+            <span className="min-w-[8.5rem] text-center text-sm font-semibold text-ink">{monthLabel}</span>
+            <button
+              onClick={() => setPeriod((p) => addMonths(p, 1))}
+              disabled={isCurrentPeriod}
+              aria-label="Next month"
+              title="Next month"
+              className="rounded-lg p-1.5 text-ink-muted hover:bg-line hover:text-ink disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronRightIcon width={16} height={16} />
+            </button>
+          </div>
+        }
+      />
 
       <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card>
@@ -176,13 +245,13 @@ export function DashboardPage() {
 
         <Card>
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-display text-base font-bold text-ink">Recent expenses</h3>
+            <h3 className="font-display text-base font-bold text-ink">{isCurrentPeriod ? 'Recent expenses' : 'Expenses this month'}</h3>
             <Link to="/expenses" className="text-xs font-bold text-brand-from">
               View all
             </Link>
           </div>
           {expenses.length === 0 ? (
-            <p className="text-sm text-ink-muted">No expenses logged yet.</p>
+            <p className="text-sm text-ink-muted">No expenses logged for this period.</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {expenses.map((e) => (
@@ -215,6 +284,58 @@ export function DashboardPage() {
                 <span className="w-20 flex-shrink-0 text-right text-sm font-bold text-ink">{format(c.actualSpent)}</span>
               </div>
             ))}
+          </div>
+        </Card>
+      )}
+
+      {trend && trend.some((p) => p.actualSpent > 0) && (
+        <Card className="mt-5">
+          <h3 className="mb-1 font-display text-base font-bold text-ink">Spending trend</h3>
+          <p className="mb-5 text-sm text-ink-muted">
+            Last {TREND_MONTHS} months — see where spending has been creeping up.
+          </p>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="flex h-40 items-end gap-3">
+              {trend.map((point) => (
+                <div key={`${point.year}-${point.month}`} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+                  <span className="text-xs font-bold text-ink">{format(point.actualSpent)}</span>
+                  <div className="flex w-full flex-1 items-end">
+                    <div
+                      className={`w-full rounded-t-md ${barColor(point.percentUsed)}`}
+                      style={{
+                        height: `${maxTrendSpent > 0 ? Math.max((point.actualSpent / maxTrendSpent) * 100, point.actualSpent > 0 ? 4 : 0) : 0}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-ink-muted">{monthShortLabel(point.month, point.year)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-muted">
+                Biggest categories over this period
+              </h4>
+              {topTrendCategories.length === 0 ? (
+                <p className="text-sm text-ink-muted">No expenses logged in this period yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {topTrendCategories.map((c) => (
+                    <div key={c.name} className="flex items-center gap-3">
+                      <span className="w-28 flex-shrink-0 truncate text-sm font-semibold text-ink">{c.name}</span>
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface-alt">
+                        <div
+                          className="h-full rounded-full bg-brand-from"
+                          style={{ width: `${maxTrendCategoryTotal > 0 ? (c.total / maxTrendCategoryTotal) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="w-20 flex-shrink-0 text-right text-sm font-bold text-ink">{format(c.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </Card>
       )}
