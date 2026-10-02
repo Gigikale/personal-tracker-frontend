@@ -37,8 +37,10 @@ function monthShortLabel(month: number, year: number) {
   return new Date(Date.UTC(year, month - 1, 1)).toLocaleString('en-US', { month: 'short' })
 }
 
-const now = new Date()
-const currentPeriod = { month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
+function getCurrentPeriod() {
+  const now = new Date()
+  return { month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
+}
 
 function addMonths(period: { month: number; year: number }, delta: number) {
   const d = new Date(Date.UTC(period.year, period.month - 1 + delta, 1))
@@ -47,6 +49,7 @@ function addMonths(period: { month: number; year: number }, delta: number) {
 
 export function DashboardPage() {
   const { format } = useCurrency()
+  const currentPeriod = getCurrentPeriod()
   const [period, setPeriod] = useState(currentPeriod)
   const [summary, setSummary] = useState<BudgetSummary | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])

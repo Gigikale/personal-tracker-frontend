@@ -12,8 +12,6 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { EditIcon, HouseholdIcon, TrashIcon } from '../../components/ui/icons'
 
-const now = new Date()
-
 function barColor(percentUsed: number | null) {
   if (percentUsed === null) return 'bg-ink-muted/40'
   if (percentUsed >= 100) return 'bg-accent-coral'
@@ -86,6 +84,7 @@ export function HouseholdDetailPage() {
     e.preventDefault()
     setBudgetError(null)
     try {
+      const now = new Date()
       await householdsApi.createBudget(id!, {
         amount: Number(budgetAmount),
         month: now.getUTCMonth() + 1,

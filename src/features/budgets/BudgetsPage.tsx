@@ -11,8 +11,10 @@ import { Modal } from '../../components/ui/Modal'
 import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { BudgetIcon, EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
-const now = new Date()
-const emptyForm = { categoryId: '', amount: '', month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
+function emptyForm() {
+  const now = new Date()
+  return { categoryId: '', amount: '', month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
+}
 
 export function BudgetsPage() {
   const { format } = useCurrency()
@@ -43,7 +45,7 @@ export function BudgetsPage() {
 
   function openCreate() {
     setEditingId(null)
-    setForm(emptyForm)
+    setForm(emptyForm())
     setError(null)
     setShowModal(true)
   }

@@ -12,7 +12,9 @@ import { Modal } from '../../components/ui/Modal'
 import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { DownloadIcon, EditIcon, ExpenseIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
-const emptyForm = { categoryId: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) }
+function emptyForm() {
+  return { categoryId: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) }
+}
 const PAGE_SIZE = 25
 
 export function ExpensesPage() {
@@ -88,7 +90,7 @@ export function ExpensesPage() {
 
   function openCreate() {
     setEditingId(null)
-    setForm(emptyForm)
+    setForm(emptyForm())
     setError(null)
     setShowModal(true)
   }
@@ -121,7 +123,7 @@ export function ExpensesPage() {
       } else {
         await expensesApi.create(payload)
       }
-      setForm(emptyForm)
+      setForm(emptyForm())
       setShowModal(false)
       load()
     } catch {

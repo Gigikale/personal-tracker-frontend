@@ -13,13 +13,15 @@ import { EditIcon, PlusIcon, RecurringIcon, TrashIcon } from '../../components/u
 
 const frequencies: RecurrenceFrequency[] = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']
 
-const emptyForm = {
-  categoryId: '',
-  amount: '',
-  description: '',
-  frequency: 'MONTHLY' as RecurrenceFrequency,
-  startDate: new Date().toISOString().slice(0, 10),
-  endDate: '',
+function emptyForm() {
+  return {
+    categoryId: '',
+    amount: '',
+    description: '',
+    frequency: 'MONTHLY' as RecurrenceFrequency,
+    startDate: new Date().toISOString().slice(0, 10),
+    endDate: '',
+  }
 }
 
 export function RecurringExpensesPage() {
@@ -51,7 +53,7 @@ export function RecurringExpensesPage() {
 
   function openCreate() {
     setEditingId(null)
-    setForm(emptyForm)
+    setForm(emptyForm())
     setError(null)
     setShowModal(true)
   }
