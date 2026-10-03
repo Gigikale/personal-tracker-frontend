@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { budgetsApi, categoriesApi, expensesApi } from '../../lib/api'
 import { useCurrency } from '../../hooks/useCurrency'
-import { addMonths, getCurrentPeriod, periodLabel, periodBounds, samePeriod } from '../../lib/period'
+import { getCurrentPeriod, periodLabel, periodBounds, samePeriod } from '../../lib/period'
 import type { BudgetSummary, BudgetTrendPoint, Category, Expense } from '../../types/api'
 import { Card } from '../../components/ui/Card'
 import { PageHeader } from '../../components/ui/PageHeader'
