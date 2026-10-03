@@ -3,18 +3,26 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { apiClient } from '../../lib/apiClient'
 import { categoriesApi, expensesApi } from '../../lib/api'
 import { useCurrency } from '../../hooks/useCurrency'
+import { getCurrentPeriod, periodBounds, periodLabel, samePeriod, type Period } from '../../lib/period'
 import type { Category, Expense } from '../../types/api'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
+import { MonthSwitcher } from '../../components/ui/MonthSwitcher'
 import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { DownloadIcon, EditIcon, ExpenseIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
 function emptyForm() {
   return { categoryId: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) }
 }
+
+function initialRange() {
+  const { start, end } = periodBounds(getCurrentPeriod())
+  return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) }
+}
+
 const PAGE_SIZE = 25
 
 export function ExpensesPage() {
@@ -25,8 +33,9 @@ export function ExpensesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState('')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  const [period, setPeriod] = useState<Period>(getCurrentPeriod)
+  const [fromDate, setFromDate] = useState(() => initialRange().from)
+  const [toDate, setToDate] = useState(() => initialRange().to)
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -75,6 +84,14 @@ export function ExpensesPage() {
     setPage(1)
   }
 
+  function handlePeriodChange(next: Period) {
+    setPeriod(next)
+    const { start, end } = periodBounds(next)
+    setFromDate(start.toISOString().slice(0, 10))
+    setToDate(end.toISOString().slice(0, 10))
+    setPage(1)
+  }
+
   function clearDateFilter() {
     setFromDate('')
     setToDate('')
@@ -87,6 +104,21 @@ export function ExpensesPage() {
 
   const categoryFor = (id: string) => categories.find((c) => c.id === id)
   const categoryName = (id: string) => categoryFor(id)?.name ?? 'Unknown'
+  const isCurrentPeriod = samePeriod(period, getCurrentPeriod())
+
+  // The month switcher keeps fromDate/toDate set to a whole month by default, so "no custom
+  // filter applied" means the range still matches that month exactly (not that it's empty).
+  const periodRange = periodBounds(period)
+  const isDefaultPeriodView =
+    !categoryFilter &&
+    fromDate === periodRange.start.toISOString().slice(0, 10) &&
+    toDate === periodRange.end.toISOString().slice(0, 10)
+  const isAllTimeView = !categoryFilter && !fromDate && !toDate
+  const emptyStateMessage = isAllTimeView
+    ? 'No expenses yet — add your first one.'
+    : isDefaultPeriodView
+      ? `No expenses logged for ${periodLabel(period)}.`
+      : 'No expenses match these filters.'
 
   function openCreate() {
     setEditingId(null)
@@ -179,6 +211,7 @@ export function ExpensesPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
+        <MonthSwitcher period={period} onChange={handlePeriodChange} disableNext={isCurrentPeriod} />
         <select
           value={categoryFilter}
           onChange={(e) => handleCategoryFilterChange(e.target.value)}
@@ -210,7 +243,7 @@ export function ExpensesPage() {
         />
         {(fromDate || toDate) && (
           <button onClick={clearDateFilter} className="text-xs font-semibold text-ink-muted hover:text-ink">
-            Clear dates
+            View all time
           </button>
         )}
       </div>
@@ -220,11 +253,7 @@ export function ExpensesPage() {
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>
       ) : expenses.length === 0 ? (
-        <Card className="text-center text-sm text-ink-muted">
-          {categoryFilter || fromDate || toDate
-            ? 'No expenses match these filters.'
-            : 'No expenses yet — add your first one.'}
-        </Card>
+        <Card className="text-center text-sm text-ink-muted">{emptyStateMessage}</Card>
       ) : (
         <Card className="overflow-x-auto p-0">
           <table className="w-full min-w-[640px] text-sm">

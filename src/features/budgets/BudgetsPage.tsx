@@ -2,35 +2,37 @@ import { useEffect, useState, type FormEvent } from 'react'
 
 import { budgetsApi, categoriesApi } from '../../lib/api'
 import { useCurrency } from '../../hooks/useCurrency'
+import { getCurrentPeriod, samePeriod, type Period } from '../../lib/period'
 import type { Budget, Category } from '../../types/api'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Modal } from '../../components/ui/Modal'
+import { MonthSwitcher } from '../../components/ui/MonthSwitcher'
 import { CategoryBadge } from '../../components/ui/CategoryBadge'
 import { BudgetIcon, EditIcon, PlusIcon, TrashIcon } from '../../components/ui/icons'
 
-function emptyForm() {
-  const now = new Date()
-  return { categoryId: '', amount: '', month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
+function emptyForm(period: Period) {
+  return { categoryId: '', amount: '', month: period.month, year: period.year }
 }
 
 export function BudgetsPage() {
   const { format } = useCurrency()
+  const [period, setPeriod] = useState(getCurrentPeriod)
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(() => emptyForm(getCurrentPeriod()))
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   function load() {
     setLoading(true)
-    Promise.all([budgetsApi.list(), categoriesApi.list()])
+    Promise.all([budgetsApi.list({ month: period.month, year: period.year }), categoriesApi.list()])
       .then(([b, c]) => {
         setBudgets(b)
         setCategories(c)
@@ -38,14 +40,15 @@ export function BudgetsPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(load, [period.month, period.year])
 
   const categoryFor = (id: string | null) => (id ? categories.find((c) => c.id === id) : undefined)
   const categoryName = (id: string | null) => (id ? categoryFor(id)?.name ?? 'Unknown' : 'Overall')
+  const isCurrentPeriod = samePeriod(period, getCurrentPeriod())
 
   function openCreate() {
     setEditingId(null)
-    setForm(emptyForm())
+    setForm(emptyForm(period))
     setError(null)
     setShowModal(true)
   }
@@ -99,9 +102,12 @@ export function BudgetsPage() {
         description="Set monthly limits, overall or per category."
         icon={<BudgetIcon width={20} height={20} />}
         action={
-          <Button onClick={openCreate} className="flex items-center gap-1.5">
-            <PlusIcon width={16} height={16} /> New budget
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <MonthSwitcher period={period} onChange={setPeriod} disableNext={isCurrentPeriod} />
+            <Button onClick={openCreate} className="flex items-center gap-1.5">
+              <PlusIcon width={16} height={16} /> New budget
+            </Button>
+          </div>
         }
       />
 
@@ -110,14 +116,15 @@ export function BudgetsPage() {
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>
       ) : budgets.length === 0 ? (
-        <Card className="text-center text-sm text-ink-muted">No budgets yet — create your first one.</Card>
+        <Card className="text-center text-sm text-ink-muted">
+          {isCurrentPeriod ? 'No budgets yet — create your first one.' : 'No budgets set for this period.'}
+        </Card>
       ) : (
         <Card className="overflow-x-auto p-0">
-          <table className="w-full min-w-[480px] text-sm">
+          <table className="w-full min-w-[420px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs font-bold uppercase tracking-wide text-ink-muted">
                 <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Period</th>
                 <th className="px-4 py-3 text-right">Amount</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -130,9 +137,6 @@ export function BudgetsPage() {
                       {categoryFor(b.categoryId) && <CategoryBadge category={categoryFor(b.categoryId)!} size={24} />}
                       {categoryName(b.categoryId)}
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-ink-muted">
-                    {b.month}/{b.year}
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-ink">{format(Number(b.amount))}</td>
                   <td className="px-4 py-3 text-right">

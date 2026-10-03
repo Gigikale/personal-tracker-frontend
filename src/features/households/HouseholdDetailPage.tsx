@@ -5,11 +5,13 @@ import { householdsApi } from '../../lib/api'
 import { useAuthStore } from '../../stores/authStore'
 import { useCurrency } from '../../hooks/useCurrency'
 import { formatMoney } from '../../lib/currency'
+import { getCurrentPeriod, periodLabel, samePeriod } from '../../lib/period'
 import type { Household, HouseholdBudgetSummary } from '../../types/api'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
+import { MonthSwitcher } from '../../components/ui/MonthSwitcher'
 import { EditIcon, HouseholdIcon, TrashIcon } from '../../components/ui/icons'
 
 function barColor(percentUsed: number | null) {
@@ -23,6 +25,7 @@ export function HouseholdDetailPage() {
   const { id } = useParams<{ id: string }>()
   const user = useAuthStore((s) => s.user)
   const { format } = useCurrency()
+  const [period, setPeriod] = useState(getCurrentPeriod)
   const [household, setHousehold] = useState<Household | null>(null)
   const [summary, setSummary] = useState<HouseholdBudgetSummary | null>(null)
   const [loading, setLoading] = useState(true)
@@ -37,7 +40,7 @@ export function HouseholdDetailPage() {
   function load() {
     if (!id) return
     setLoading(true)
-    Promise.all([householdsApi.get(id), householdsApi.summary(id)])
+    Promise.all([householdsApi.get(id), householdsApi.summary(id, { month: period.month, year: period.year })])
       .then(([h, s]) => {
         setHousehold(h)
         setSummary(s)
@@ -45,7 +48,8 @@ export function HouseholdDetailPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [id])
+  useEffect(load, [id, period.month, period.year])
+  const isCurrentPeriod = samePeriod(period, getCurrentPeriod())
 
   if (loading || !household || !summary) return <p className="text-sm text-ink-muted">Loading…</p>
 
@@ -84,16 +88,15 @@ export function HouseholdDetailPage() {
     e.preventDefault()
     setBudgetError(null)
     try {
-      const now = new Date()
       await householdsApi.createBudget(id!, {
         amount: Number(budgetAmount),
-        month: now.getUTCMonth() + 1,
-        year: now.getUTCFullYear(),
+        month: period.month,
+        year: period.year,
       })
       setBudgetAmount('')
       load()
     } catch {
-      setBudgetError('A budget for this month may already exist.')
+      setBudgetError('A budget for this period may already exist.')
     }
   }
 
@@ -135,12 +138,13 @@ export function HouseholdDetailPage() {
         title={household.name}
         description={`${household.members.length} member(s)`}
         icon={<HouseholdIcon width={20} height={20} />}
+        action={<MonthSwitcher period={period} onChange={setPeriod} disableNext={isCurrentPeriod} />}
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-display text-base font-bold text-ink">Shared budget this month</h3>
+            <h3 className="font-display text-base font-bold text-ink">Shared budget — {periodLabel(period)}</h3>
             {summary.budgetAmount !== null && !editingBudget && (
               <div className="flex items-center gap-2">
                 <button

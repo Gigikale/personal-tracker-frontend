@@ -5,6 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ExpensesPage } from './ExpensesPage'
 import { categoriesApi, expensesApi } from '../../lib/api'
 import { useAuthStore } from '../../stores/authStore'
+import { getCurrentPeriod, periodLabel } from '../../lib/period'
+
+const EMPTY_STATE_MESSAGE = `No expenses logged for ${periodLabel(getCurrentPeriod())}.`
 
 vi.mock('../../lib/api', () => ({
   expensesApi: {
@@ -44,7 +47,7 @@ describe('ExpensesPage', () => {
     mockList([], 0)
     render(<ExpensesPage />)
 
-    expect(await screen.findByText('No expenses yet — add your first one.')).toBeInTheDocument()
+    expect(await screen.findByText(EMPTY_STATE_MESSAGE)).toBeInTheDocument()
   })
 
   it('lists expenses with their category name and formatted amount', async () => {
@@ -63,7 +66,7 @@ describe('ExpensesPage', () => {
     vi.mocked(expensesApi.create).mockResolvedValue({ ...EXPENSE, id: 'exp-2' })
 
     render(<ExpensesPage />)
-    await screen.findByText('No expenses yet — add your first one.')
+    await screen.findByText(EMPTY_STATE_MESSAGE)
 
     await user.click(screen.getByRole('button', { name: /add expense/i }))
     // The filter select and the modal's category select are both <select> elements;

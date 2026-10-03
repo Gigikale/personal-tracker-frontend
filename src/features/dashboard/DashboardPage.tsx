@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 
 import { budgetsApi, categoriesApi, expensesApi } from '../../lib/api'
 import { useCurrency } from '../../hooks/useCurrency'
+import { addMonths, getCurrentPeriod, periodLabel, periodBounds, samePeriod } from '../../lib/period'
 import type { BudgetSummary, BudgetTrendPoint, Category, Expense } from '../../types/api'
 import { Card } from '../../components/ui/Card'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { ChevronLeftIcon, ChevronRightIcon, DashboardIcon } from '../../components/ui/icons'
+import { MonthSwitcher } from '../../components/ui/MonthSwitcher'
+import { DashboardIcon } from '../../components/ui/icons'
 
 const TREND_MONTHS = 5
 
@@ -33,20 +35,6 @@ function StatusBadge({ percentUsed }: { percentUsed: number | null }) {
   )
 }
 
-function monthShortLabel(month: number, year: number) {
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleString('en-US', { month: 'short' })
-}
-
-function getCurrentPeriod() {
-  const now = new Date()
-  return { month: now.getUTCMonth() + 1, year: now.getUTCFullYear() }
-}
-
-function addMonths(period: { month: number; year: number }, delta: number) {
-  const d = new Date(Date.UTC(period.year, period.month - 1 + delta, 1))
-  return { month: d.getUTCMonth() + 1, year: d.getUTCFullYear() }
-}
-
 export function DashboardPage() {
   const { format } = useCurrency()
   const currentPeriod = getCurrentPeriod()
@@ -59,14 +47,11 @@ export function DashboardPage() {
 
   useEffect(() => {
     setLoading(true)
-    const periodStart = new Date(Date.UTC(period.year, period.month - 1, 1))
-    // Last instant of the period's final day, so an expense logged at any time that day is
-    // still included by the backend's inclusive `to` (lte) filter.
-    const periodEnd = new Date(Date.UTC(period.year, period.month, 0, 23, 59, 59, 999))
+    const { start, end } = periodBounds(period)
 
     Promise.all([
       budgetsApi.summary({ month: period.month, year: period.year }),
-      expensesApi.list({ from: periodStart.toISOString(), to: periodEnd.toISOString(), limit: 6 }),
+      expensesApi.list({ from: start.toISOString(), to: end.toISOString(), limit: 6 }),
       categoriesApi.list(),
     ])
       .then(([s, e, c]) => {
@@ -82,13 +67,7 @@ export function DashboardPage() {
   }, [])
 
   const categoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? 'Unknown'
-  const monthLabel = summary
-    ? new Date(Date.UTC(summary.year, summary.month - 1, 1)).toLocaleString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
-    : ''
-  const isCurrentPeriod = period.month === currentPeriod.month && period.year === currentPeriod.year
+  const isCurrentPeriod = samePeriod(period, currentPeriod)
 
   if (loading) return <p className="text-sm text-ink-muted">Loading…</p>
 
@@ -136,28 +115,7 @@ export function DashboardPage() {
       <PageHeader
         title="Dashboard"
         icon={<DashboardIcon width={20} height={20} />}
-        action={
-          <div className="flex items-center gap-1 rounded-xl border border-line bg-surface-alt px-1.5 py-1.5">
-            <button
-              onClick={() => setPeriod((p) => addMonths(p, -1))}
-              aria-label="Previous month"
-              title="Previous month"
-              className="rounded-lg p-1.5 text-ink-muted hover:bg-line hover:text-ink"
-            >
-              <ChevronLeftIcon width={16} height={16} />
-            </button>
-            <span className="min-w-[8.5rem] text-center text-sm font-semibold text-ink">{monthLabel}</span>
-            <button
-              onClick={() => setPeriod((p) => addMonths(p, 1))}
-              disabled={isCurrentPeriod}
-              aria-label="Next month"
-              title="Next month"
-              className="rounded-lg p-1.5 text-ink-muted hover:bg-line hover:text-ink disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-            >
-              <ChevronRightIcon width={16} height={16} />
-            </button>
-          </div>
-        }
+        action={<MonthSwitcher period={period} onChange={setPeriod} disableNext={isCurrentPeriod} />}
       />
 
       <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -311,7 +269,7 @@ export function DashboardPage() {
                       }}
                     />
                   </div>
-                  <span className="text-xs font-semibold text-ink-muted">{monthShortLabel(point.month, point.year)}</span>
+                  <span className="text-xs font-semibold text-ink-muted">{periodLabel(point, 'short')}</span>
                 </div>
               ))}
             </div>
