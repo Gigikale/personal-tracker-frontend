@@ -32,8 +32,9 @@ const EXPENSE = {
   recurringExpenseId: null,
 }
 
-function mockList(expenses = [EXPENSE], total = expenses.length) {
-  vi.mocked(expensesApi.list).mockResolvedValue({ data: expenses, total })
+function mockList(expenses = [EXPENSE], total = expenses.length, totalAmount: number | null = null) {
+  const sum = expenses.reduce((acc, e) => acc + Number(e.amount), 0)
+  vi.mocked(expensesApi.list).mockResolvedValue({ data: expenses, total, totalAmount: totalAmount ?? sum })
   vi.mocked(categoriesApi.list).mockResolvedValue([CATEGORY])
 }
 
@@ -116,5 +117,40 @@ describe('ExpensesPage', () => {
     await user.click(screen.getByLabelText('Delete expense'))
 
     expect(expensesApi.remove).not.toHaveBeenCalled()
+  })
+
+  it('shows the total of everything matching the filters, not just the visible page', async () => {
+    mockList([EXPENSE], 3, 15000)
+    render(<ExpensesPage />)
+
+    expect(await screen.findByText('$15,000.00')).toBeInTheDocument()
+    expect(screen.getByText(/3 expenses/)).toBeInTheDocument()
+  })
+
+  it('switches to the whole year, then to all time', async () => {
+    const user = userEvent.setup()
+    mockList()
+    render(<ExpensesPage />)
+    await screen.findByText('Weekly shop')
+    const year = getCurrentPeriod().year
+
+    await user.click(screen.getByRole('button', { name: 'This year' }))
+    await waitFor(() =>
+      expect(expensesApi.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          from: `${year}-01-01T00:00:00.000Z`,
+          to: `${year}-12-31T23:59:59.999Z`,
+        }),
+      ),
+    )
+    expect(screen.getByRole('button', { name: 'This year' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByLabelText('Previous month')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'All time' }))
+    await waitFor(() => {
+      const params = vi.mocked(expensesApi.list).mock.lastCall![0]!
+      expect(params.from).toBeUndefined()
+      expect(params.to).toBeUndefined()
+    })
   })
 })

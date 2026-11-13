@@ -23,17 +23,28 @@ function initialRange() {
   return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) }
 }
 
+// 'custom' is any range typed into the date boxes.
+type RangeMode = 'month' | 'year' | 'all' | 'custom'
+
+const RANGE_OPTIONS: { mode: Exclude<RangeMode, 'custom'>; label: string }[] = [
+  { mode: 'month', label: 'Month' },
+  { mode: 'year', label: 'This year' },
+  { mode: 'all', label: 'All time' },
+]
+
 const PAGE_SIZE = 25
 
 export function ExpensesPage() {
   const { format } = useCurrency()
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [total, setTotal] = useState(0)
+  const [totalAmount, setTotalAmount] = useState<number | null>(null)
   const [page, setPage] = useState(1)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState('')
   const [period, setPeriod] = useState<Period>(getCurrentPeriod)
+  const [rangeMode, setRangeMode] = useState<RangeMode>('month')
   const [fromDate, setFromDate] = useState(() => initialRange().from)
   const [toDate, setToDate] = useState(() => initialRange().to)
   const [showModal, setShowModal] = useState(false)
@@ -66,6 +77,7 @@ export function ExpensesPage() {
       .then(([e, c]) => {
         setExpenses(e.data)
         setTotal(e.total)
+        setTotalAmount(e.totalAmount)
         setCategories(c)
       })
       .finally(() => setLoading(false))
@@ -81,20 +93,30 @@ export function ExpensesPage() {
   function handleDateFilterChange(field: 'from' | 'to', value: string) {
     if (field === 'from') setFromDate(value)
     else setToDate(value)
+    setRangeMode('custom')
     setPage(1)
   }
 
   function handlePeriodChange(next: Period) {
     setPeriod(next)
+    setRangeMode('month')
     const { start, end } = periodBounds(next)
     setFromDate(start.toISOString().slice(0, 10))
     setToDate(end.toISOString().slice(0, 10))
     setPage(1)
   }
 
-  function clearDateFilter() {
-    setFromDate('')
-    setToDate('')
+  function handleRangeModeChange(mode: Exclude<RangeMode, 'custom'>) {
+    if (mode === 'month') return handlePeriodChange(period)
+    setRangeMode(mode)
+    if (mode === 'year') {
+      const year = getCurrentPeriod().year
+      setFromDate(`${year}-01-01`)
+      setToDate(`${year}-12-31`)
+    } else {
+      setFromDate('')
+      setToDate('')
+    }
     setPage(1)
   }
 
@@ -106,19 +128,21 @@ export function ExpensesPage() {
   const categoryName = (id: string) => categoryFor(id)?.name ?? 'Unknown'
   const isCurrentPeriod = samePeriod(period, getCurrentPeriod())
 
-  // The month switcher keeps fromDate/toDate set to a whole month by default, so "no custom
-  // filter applied" means the range still matches that month exactly (not that it's empty).
-  const periodRange = periodBounds(period)
-  const isDefaultPeriodView =
-    !categoryFilter &&
-    fromDate === periodRange.start.toISOString().slice(0, 10) &&
-    toDate === periodRange.end.toISOString().slice(0, 10)
-  const isAllTimeView = !categoryFilter && !fromDate && !toDate
-  const emptyStateMessage = isAllTimeView
-    ? 'No expenses yet — add your first one.'
-    : isDefaultPeriodView
-      ? `No expenses logged for ${periodLabel(period)}.`
-      : 'No expenses match these filters.'
+  const rangeLabel =
+    rangeMode === 'month'
+      ? periodLabel(period)
+      : rangeMode === 'year'
+        ? `${getCurrentPeriod().year} so far`
+        : rangeMode === 'all'
+          ? 'all time'
+          : `${fromDate || 'the start'} to ${toDate || 'today'}`
+  const emptyStateMessage = categoryFilter
+    ? 'No expenses match these filters.'
+    : rangeMode === 'all'
+      ? 'No expenses yet — add your first one.'
+      : rangeMode === 'custom'
+        ? 'No expenses match these filters.'
+        : `No expenses logged for ${rangeLabel}.`
 
   function openCreate() {
     setEditingId(null)
@@ -211,7 +235,21 @@ export function ExpensesPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <MonthSwitcher period={period} onChange={handlePeriodChange} disableNext={isCurrentPeriod} />
+        <div role="group" aria-label="Date range" className="flex rounded-xl border border-line bg-surface-alt p-1">
+          {RANGE_OPTIONS.map((o) => (
+            <button
+              key={o.mode}
+              onClick={() => handleRangeModeChange(o.mode)}
+              aria-pressed={rangeMode === o.mode}
+              className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${rangeMode === o.mode ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'}`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        {rangeMode === 'month' && (
+          <MonthSwitcher period={period} onChange={handlePeriodChange} disableNext={isCurrentPeriod} />
+        )}
         <select
           value={categoryFilter}
           onChange={(e) => handleCategoryFilterChange(e.target.value)}
@@ -241,14 +279,22 @@ export function ExpensesPage() {
           onChange={(e) => handleDateFilterChange('to', e.target.value)}
           className="rounded-xl border border-line bg-surface-alt px-3 py-2 text-sm font-semibold text-ink"
         />
-        {(fromDate || toDate) && (
-          <button onClick={clearDateFilter} className="text-xs font-semibold text-ink-muted hover:text-ink">
-            View all time
-          </button>
-        )}
       </div>
 
       {actionError && <p className="mb-3 text-sm font-semibold text-accent-coral">{actionError}</p>}
+
+      {!loading && total > 0 && (
+        <p className="mb-3 text-sm text-ink-muted">
+          {total} {total === 1 ? 'expense' : 'expenses'}
+          {categoryFilter && <> in <span className="font-semibold text-ink">{categoryName(categoryFilter)}</span></>}
+          {' '}· {rangeLabel}
+          {totalAmount !== null && (
+            <>
+              {' '}· <span className="font-bold text-ink">{format(totalAmount)}</span> total
+            </>
+          )}
+        </p>
+      )}
 
       {loading ? (
         <p className="text-sm text-ink-muted">Loading…</p>

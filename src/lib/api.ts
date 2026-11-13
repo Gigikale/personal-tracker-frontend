@@ -60,6 +60,8 @@ export const expensesApi = {
     apiClient.get<Expense[]>('/expenses', { params }).then((r) => ({
       data: r.data,
       total: Number(r.headers['x-total-count'] ?? r.data.length),
+      // Sum of every matching expense across all pages; null if the backend doesn't send it.
+      totalAmount: r.headers['x-total-amount'] != null ? Number(r.headers['x-total-amount']) : null,
     })),
   create: (data: { categoryId: string; amount: number; description?: string; date: string }) =>
     apiClient.post<Expense>('/expenses', data).then((r) => r.data),
