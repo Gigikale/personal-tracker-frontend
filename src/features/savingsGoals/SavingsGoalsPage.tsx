@@ -126,6 +126,7 @@ export function SavingsGoalsPage() {
             const current = Number(g.currentAmount)
             const target = Number(g.targetAmount)
             const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0
+            const remaining = Math.max(target - current, 0)
             return (
               <Card key={g.id}>
                 <div className="mb-2 flex items-start justify-between">
@@ -149,9 +150,16 @@ export function SavingsGoalsPage() {
                     </button>
                   </div>
                 </div>
-                <p className="mb-2 text-sm text-ink-muted">
-                  {format(current)} <span className="text-ink-muted/70">of {format(target)}</span>
-                </p>
+                <div className="mb-2 flex items-baseline justify-between gap-2 text-sm">
+                  <p className="text-ink-muted">
+                    {format(current)} <span className="text-ink-muted/70">of {format(target)}</span>
+                  </p>
+                  {remaining > 0 ? (
+                    <p className="font-semibold text-ink">{format(remaining)} remaining</p>
+                  ) : (
+                    <p className="font-semibold text-brand-from">Goal reached</p>
+                  )}
+                </div>
                 <div className="mb-3 h-2 overflow-hidden rounded-full bg-surface-alt">
                   <div className="h-full rounded-full bg-brand-from" style={{ width: `${pct}%` }} />
                 </div>

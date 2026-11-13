@@ -9,6 +9,7 @@ import type {
   Household,
   HouseholdBudget,
   HouseholdBudgetSummary,
+  HouseholdBudgetYearSummary,
   Notification,
   RecurringExpense,
   SavingsGoal,
@@ -145,5 +146,9 @@ export const householdsApi = {
   summary: (id: string, params?: { month?: number; year?: number }) =>
     apiClient
       .get<HouseholdBudgetSummary>(`/households/${id}/budgets/summary`, { params })
+      .then((r) => r.data),
+  yearSummary: (id: string, year: number) =>
+    apiClient
+      .get<HouseholdBudgetYearSummary>(`/households/${id}/budgets/year-summary`, { params: { year } })
       .then((r) => r.data),
 }

@@ -13,6 +13,7 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { MonthSwitcher } from '../../components/ui/MonthSwitcher'
 import { EditIcon, HouseholdIcon, TrashIcon } from '../../components/ui/icons'
+import { HouseholdYearOverview } from './HouseholdYearOverview'
 
 function barColor(percentUsed: number | null) {
   if (percentUsed === null) return 'bg-ink-muted/40'
@@ -286,6 +287,9 @@ export function HouseholdDetailPage() {
           )}
         </Card>
       </div>
+
+      {/* Reloads whenever the monthly summary does, so a budget set above shows up here too. */}
+      <HouseholdYearOverview householdId={id!} period={period} onSelectMonth={setPeriod} refreshKey={summary} />
     </div>
   )
 }

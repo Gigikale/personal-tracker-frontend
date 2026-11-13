@@ -134,3 +134,25 @@ export interface HouseholdBudgetSummary {
   hasMixedCurrencies: boolean
   byMember: { userId: string; name: string; currency: CurrencyCode; spent: number }[]
 }
+
+export interface HouseholdBudgetYearSummary {
+  year: number
+  hasMixedCurrencies: boolean
+  months: {
+    month: number
+    budgetId: string | null
+    budgetAmount: number | null
+    actualSpent: number
+    remaining: number | null
+    percentUsed: number | null
+  }[]
+  // Budget, spent-in-budgeted-months, remaining and percentUsed only count months that have a budget.
+  totals: {
+    budgetedMonths: number
+    budgetAmount: number
+    spentInBudgetedMonths: number
+    remaining: number
+    percentUsed: number | null
+    totalSpent: number
+  }
+}
